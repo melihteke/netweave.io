@@ -1,0 +1,35 @@
+apiVersion: netweave.io/v1
+kind: Topology
+metadata:
+  name: lb-web-tier
+  description: Load balancer in front of three web servers.
+devices:
+  - hostname: lb-01
+    type: load-balancer
+    interfaces:
+      - { name: eth0, kind: l3, ipv4: 203.0.113.10/32, description: "VIP" }
+      - { name: eth1, kind: l3, ipv4: 10.50.0.1/24, description: "backend" }
+  - hostname: sw-be
+    type: l2-switch
+    interfaces:
+      - { name: Gi1/0/1, kind: trunk }
+      - { name: Gi1/0/10, kind: access, vlan: 50 }
+      - { name: Gi1/0/11, kind: access, vlan: 50 }
+      - { name: Gi1/0/12, kind: access, vlan: 50 }
+  - hostname: web-01
+    type: server
+    interfaces:
+      - { name: eth0, kind: access, vlan: 50 }
+  - hostname: web-02
+    type: server
+    interfaces:
+      - { name: eth0, kind: access, vlan: 50 }
+  - hostname: web-03
+    type: server
+    interfaces:
+      - { name: eth0, kind: access, vlan: 50 }
+links:
+  - { a: { device: lb-01, interface: eth1 }, b: { device: sw-be, interface: Gi1/0/1 }, type: trunk }
+  - { a: { device: sw-be, interface: Gi1/0/10 }, b: { device: web-01, interface: eth0 }, type: access }
+  - { a: { device: sw-be, interface: Gi1/0/11 }, b: { device: web-02, interface: eth0 }, type: access }
+  - { a: { device: sw-be, interface: Gi1/0/12 }, b: { device: web-03, interface: eth0 }, type: access }

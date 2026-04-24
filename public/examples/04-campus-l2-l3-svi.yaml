@@ -1,0 +1,45 @@
+apiVersion: netweave.io/v1
+kind: Topology
+metadata:
+  name: campus-l2-l3-svi
+  description: Collapsed-core campus with L2 access + SVI gateways on the core.
+devices:
+  - hostname: core-01
+    type: l3-switch
+    interfaces:
+      - { name: Lo0, kind: loopback, ipv4: 10.0.0.1/32 }
+      - { name: Vlan10, kind: svi, ipv4: 10.10.0.1/24, description: "users" }
+      - { name: Vlan20, kind: svi, ipv4: 10.20.0.1/24, description: "voip" }
+      - { name: Po1, kind: lacp, members: [Eth1/1, Eth1/2] }
+      - { name: Po2, kind: lacp, members: [Eth1/3, Eth1/4] }
+    protocols:
+      ospf:
+        process: 1
+        router_id: 10.0.0.1
+        areas:
+          - { id: 0, interfaces: [Lo0] }
+  - hostname: acc-01
+    type: l2-switch
+    interfaces:
+      - { name: Po1, kind: lacp, members: [Gi1/0/47, Gi1/0/48] }
+      - { name: Gi1/0/1, kind: access, vlan: 10 }
+      - { name: Gi1/0/2, kind: access, vlan: 20 }
+  - hostname: acc-02
+    type: l2-switch
+    interfaces:
+      - { name: Po1, kind: lacp, members: [Gi1/0/47, Gi1/0/48] }
+      - { name: Gi1/0/1, kind: access, vlan: 10 }
+      - { name: Gi1/0/2, kind: access, vlan: 20 }
+  - hostname: ap-01
+    type: ap
+    interfaces:
+      - { name: Gi0, kind: access, vlan: 10 }
+  - hostname: wlc-01
+    type: wlc
+    interfaces:
+      - { name: Gi0/0, kind: trunk }
+links:
+  - { a: { device: core-01, interface: Po1 }, b: { device: acc-01, interface: Po1 }, type: lacp }
+  - { a: { device: core-01, interface: Po2 }, b: { device: acc-02, interface: Po1 }, type: lacp }
+  - { a: { device: acc-01, interface: Gi1/0/1 }, b: { device: ap-01, interface: Gi0 }, type: access }
+  - { a: { device: acc-02, interface: Gi1/0/2 }, b: { device: wlc-01, interface: Gi0/0 }, type: trunk }
