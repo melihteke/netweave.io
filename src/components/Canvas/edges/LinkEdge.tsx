@@ -1,7 +1,15 @@
 'use client';
 
-import { BaseEdge, EdgeLabelRenderer, getBezierPath, type EdgeProps } from '@xyflow/react';
+import {
+  BaseEdge,
+  EdgeLabelRenderer,
+  getBezierPath,
+  getSmoothStepPath,
+  getStraightPath,
+  type EdgeProps,
+} from '@xyflow/react';
 import type { LinkEdgeData } from '@/lib/transform/toGraph';
+import type { EdgePathType, EdgeColorMode } from '@/lib/canvasSettings';
 
 const TYPE_COLORS: Record<string, string> = {
   l2: '#0f766e',
@@ -10,6 +18,26 @@ const TYPE_COLORS: Record<string, string> = {
   trunk: '#7c3aed',
   access: '#0ea5e9',
 };
+
+export type LinkEdgePathData = LinkEdgeData & {
+  pathType?: EdgePathType;
+  colorMode?: EdgeColorMode;
+  monoColor?: string;
+};
+
+function pathFor(type: EdgePathType | undefined, args: Parameters<typeof getBezierPath>[0]) {
+  switch (type) {
+    case 'straight':
+      return getStraightPath(args);
+    case 'step':
+      return getSmoothStepPath({ ...args, borderRadius: 0 });
+    case 'smoothstep':
+      return getSmoothStepPath({ ...args, borderRadius: 14 });
+    case 'bezier':
+    default:
+      return getBezierPath(args);
+  }
+}
 
 export function LinkEdge(props: EdgeProps) {
   const {
@@ -26,8 +54,8 @@ export function LinkEdge(props: EdgeProps) {
     animated,
   } = props;
 
-  const d = data as LinkEdgeData | undefined;
-  const [edgePath, labelX, labelY] = getBezierPath({
+  const d = data as LinkEdgePathData | undefined;
+  const [edgePath, labelX, labelY] = pathFor(d?.pathType, {
     sourceX,
     sourceY,
     targetX,
@@ -36,7 +64,9 @@ export function LinkEdge(props: EdgeProps) {
     targetPosition,
   });
 
-  const stroke = d?.type ? TYPE_COLORS[d.type] ?? 'currentColor' : 'currentColor';
+  const colorMode = d?.colorMode ?? 'type';
+  const typeColor = d?.type ? TYPE_COLORS[d.type] ?? '#64748b' : '#64748b';
+  const stroke = colorMode === 'mono' ? d?.monoColor ?? '#64748b' : typeColor;
 
   return (
     <>
@@ -45,10 +75,11 @@ export function LinkEdge(props: EdgeProps) {
         path={edgePath}
         style={{
           stroke,
-          strokeWidth: selected ? 2.4 : 1.6,
+          strokeWidth: selected ? 3 : 1.8,
           strokeDasharray: animated ? '6 4' : undefined,
           ...style,
         }}
+        interactionWidth={18}
       />
       {(d?.aInterface || d?.bInterface) && (
         <EdgeLabelRenderer>
@@ -56,16 +87,13 @@ export function LinkEdge(props: EdgeProps) {
             style={{
               position: 'absolute',
               transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)`,
-              pointerEvents: 'all',
+              pointerEvents: 'none',
             }}
-            className="pointer-events-none select-none rounded-md border border-[rgb(var(--border))] bg-[rgb(var(--panel))] px-1.5 py-0.5 text-[10px] font-mono text-[rgb(var(--fg))] shadow-sm"
+            className="select-none rounded-md border border-[rgb(var(--border))] bg-[rgb(var(--panel))] px-1.5 py-0.5 text-[10px] font-mono text-[rgb(var(--fg))] shadow-sm"
           >
             {d?.aInterface}
             {d?.aInterface && d?.bInterface ? ' ↔ ' : ''}
             {d?.bInterface}
-            {d?.description ? (
-              <span className="ml-1 muted">· {d.description}</span>
-            ) : null}
           </div>
         </EdgeLabelRenderer>
       )}
