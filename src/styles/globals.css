@@ -1,0 +1,102 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: 250 250 252;
+  --fg: 15 23 42;
+  --panel: 255 255 255;
+  --border: 226 232 240;
+  --muted: 100 116 139;
+  --accent: 53 125 251;
+}
+
+.dark {
+  --bg: 9 12 22;
+  --fg: 226 232 240;
+  --panel: 17 22 38;
+  --border: 31 41 67;
+  --muted: 148 163 184;
+  --accent: 90 160 255;
+}
+
+html,
+body,
+#__next {
+  height: 100%;
+}
+
+body {
+  background: rgb(var(--bg));
+  color: rgb(var(--fg));
+  font-family: var(--font-sans, ui-sans-serif, system-ui, sans-serif);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.panel {
+  background: rgb(var(--panel));
+  border: 1px solid rgb(var(--border));
+}
+
+.muted {
+  color: rgb(var(--muted));
+}
+
+.accent {
+  color: rgb(var(--accent));
+}
+
+/* React Flow theme harmonization */
+.react-flow__background {
+  background: rgb(var(--bg));
+}
+
+.react-flow__edge-path,
+.react-flow__connection-path {
+  stroke: rgb(var(--muted));
+  stroke-width: 1.5;
+}
+
+.react-flow__edge.selected .react-flow__edge-path {
+  stroke: rgb(var(--accent));
+  stroke-width: 2;
+}
+
+.react-flow__controls {
+  background: rgb(var(--panel));
+  border: 1px solid rgb(var(--border));
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.react-flow__controls-button {
+  background: rgb(var(--panel));
+  color: rgb(var(--fg));
+  border-bottom: 1px solid rgb(var(--border));
+}
+
+.react-flow__controls-button svg {
+  fill: currentColor;
+}
+
+.react-flow__minimap {
+  background: rgb(var(--panel));
+  border: 1px solid rgb(var(--border));
+  border-radius: 8px;
+}
+
+/* CodeMirror editor */
+.cm-editor {
+  height: 100%;
+  font-family: var(--font-mono, ui-monospace, Menlo, monospace);
+  font-size: 13px;
+}
+
+.cm-editor .cm-scroller {
+  font-family: inherit;
+}
+
+.cm-editor.cm-focused {
+  outline: none;
+}
