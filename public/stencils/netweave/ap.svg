@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-label="Access Point">
+  <defs>
+    <radialGradient id="apBody" cx="0.5" cy="0.35" r="0.7">
+      <stop offset="0%" stop-color="#fde68a"/>
+      <stop offset="100%" stop-color="#d97706"/>
+    </radialGradient>
+  </defs>
+  <g stroke="#b45309" stroke-width="2.5" fill="none" stroke-linecap="round">
+    <path d="M22 40 Q48 16 74 40"/>
+    <path d="M30 46 Q48 28 66 46"/>
+    <path d="M38 52 Q48 42 58 52"/>
+  </g>
+  <ellipse cx="48" cy="66" rx="28" ry="10" fill="url(#apBody)" stroke="#78350f" stroke-width="2"/>
+  <circle cx="48" cy="66" r="3" fill="#78350f"/>
+</svg>

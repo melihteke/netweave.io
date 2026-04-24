@@ -1,0 +1,36 @@
+name: ceos-mixed-lab
+topology:
+  nodes:
+    spine1:
+      kind: ceos
+      image: ceos:4.32.0F
+      mgmt_ipv4: 172.20.20.11
+    spine2:
+      kind: ceos
+      image: ceos:4.32.0F
+      mgmt_ipv4: 172.20.20.12
+    leaf1:
+      kind: ceos
+      image: ceos:4.32.0F
+      mgmt_ipv4: 172.20.20.21
+    leaf2:
+      kind: ceos
+      image: ceos:4.32.0F
+      mgmt_ipv4: 172.20.20.22
+    fw1:
+      kind: vr-vsrx
+      image: vr-vsrx:21.4R3
+    h1:
+      kind: linux
+      image: alpine:3
+    h2:
+      kind: linux
+      image: alpine:3
+  links:
+    - endpoints: ["spine1:eth1", "leaf1:eth49"]
+    - endpoints: ["spine1:eth2", "leaf2:eth49"]
+    - endpoints: ["spine2:eth1", "leaf1:eth50"]
+    - endpoints: ["spine2:eth2", "leaf2:eth50"]
+    - endpoints: ["leaf1:eth1", "h1:eth1"]
+    - endpoints: ["leaf2:eth1", "fw1:ge-0/0/0"]
+    - endpoints: ["fw1:ge-0/0/1", "h2:eth1"]
