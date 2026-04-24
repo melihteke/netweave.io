@@ -1,11 +1,15 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Header } from '@/components/Layout/Header';
 import { YamlEditor } from '@/components/Editor/YamlEditor';
-import { TopologyCanvas } from '@/components/Canvas/TopologyCanvas';
+import { TopologyCanvas, type CanvasHandle } from '@/components/Canvas/TopologyCanvas';
 import { ViewToggle, type TopologyView } from '@/components/Canvas/ViewToggle';
+import { Toolbar, type ExportFormat } from '@/components/Canvas/Toolbar';
+import { LinkDetails, type SelectedLink } from '@/components/Canvas/LinkDetails';
 import { parseTopologyYaml, type ParseResult } from '@/lib/yaml/parse';
+import { DEFAULT_SETTINGS, type CanvasSettings } from '@/lib/canvasSettings';
+import { exportTopology } from '@/lib/export';
 import { AlertTriangle, CheckCircle2, FileCode2 } from 'lucide-react';
 import { STARTER_YAML } from '@/lib/examples/starter';
 
@@ -14,8 +18,10 @@ export default function Page() {
   const [view, setView] = useState<TopologyView>('physical');
   const [engine, setEngine] = useState<'elk' | 'dagre'>('elk');
   const [result, setResult] = useState<ParseResult | null>(null);
+  const [settings, setSettings] = useState<CanvasSettings>(DEFAULT_SETTINGS);
+  const [selectedLink, setSelectedLink] = useState<SelectedLink | null>(null);
+  const canvasRef = useRef<CanvasHandle>(null);
 
-  // Hydrate the editor from a ?example=<file> URL param.
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const params = new URLSearchParams(window.location.search);
@@ -29,7 +35,6 @@ export default function Page() {
       .catch(() => {});
   }, []);
 
-  // Debounced parse so every keystroke doesn't stall the canvas.
   useEffect(() => {
     const t = setTimeout(() => setResult(parseTopologyYaml(source)), 150);
     return () => clearTimeout(t);
@@ -37,6 +42,17 @@ export default function Page() {
 
   const topology = result?.ok ? result.topology : null;
   const statusLine = useMemo(() => describe(result), [result]);
+
+  const handleExport = async (fmt: ExportFormat) => {
+    const el = canvasRef.current?.getExportElement();
+    if (!el) return;
+    try {
+      await exportTopology(fmt, el, topology);
+    } catch (err) {
+      console.error('Export failed', err);
+      alert(`Export failed: ${err instanceof Error ? err.message : 'unknown error'}`);
+    }
+  };
 
   return (
     <div className="flex h-screen flex-col">
@@ -63,6 +79,7 @@ export default function Page() {
           </select>
         </div>
       </div>
+      <Toolbar settings={settings} onChange={setSettings} onExport={handleExport} />
       <div className="grid flex-1 grid-cols-1 md:grid-cols-[minmax(320px,40%)_1fr]">
         <section className="flex min-h-0 flex-col border-r border-[rgb(var(--border))] bg-[rgb(var(--panel))]">
           <div className="flex items-center justify-between border-b border-[rgb(var(--border))] px-3 py-1.5 text-xs">
@@ -86,12 +103,24 @@ export default function Page() {
           <div className="flex-1 min-h-0">
             <YamlEditor value={source} onChange={setSource} />
           </div>
-          {result && !result.ok ? (
-            <ErrorPanel result={result} />
-          ) : null}
+          {result && !result.ok ? <ErrorPanel result={result} /> : null}
         </section>
-        <section className="min-h-0 bg-[rgb(var(--bg))]">
-          <TopologyCanvas topology={topology} view={view} engine={engine} />
+        <section className="relative min-h-0 bg-[rgb(var(--bg))]">
+          <TopologyCanvas
+            ref={canvasRef}
+            topology={topology}
+            view={view}
+            engine={engine}
+            settings={settings}
+            onLinkSelect={setSelectedLink}
+          />
+          {selectedLink ? (
+            <LinkDetails
+              link={selectedLink}
+              topology={topology}
+              onClose={() => setSelectedLink(null)}
+            />
+          ) : null}
         </section>
       </div>
     </div>
